@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 7ad8abeb5e0a96b4f8eb1f619fe7d353
+timeCreated: 1460467751
+licenseType: Store
+TextScriptImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 60462
+  packageName: Chibi Mummy
+  packageVersion: 1.1
+  assetPath: Assets/Chibi Mummy/readme.txt
+  uploadId: 177905

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 381c5c28dc856bf4ebde73065e6bcf61
+timeCreated: 1493777383
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 60462
+  packageName: Chibi Mummy
+  packageVersion: 1.1
+  assetPath: Assets/Chibi Mummy/Scenes/Demo_scene/LightmapSnapshot.asset
+  uploadId: 177905

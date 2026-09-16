@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: d90c2b41f9ca1c7458661e02d2d4414e
+timeCreated: 1460337084
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 60462
+  packageName: Chibi Mummy
+  packageVersion: 1.1
+  assetPath: Assets/Chibi Mummy/Materials/plane_mat.mat
+  uploadId: 177905

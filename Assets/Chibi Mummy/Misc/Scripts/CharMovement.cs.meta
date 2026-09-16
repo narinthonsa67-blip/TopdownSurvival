@@ -1,0 +1,19 @@
+fileFormatVersion: 2
+guid: e2d2e188784ab2e419ea4ec78b7bc684
+timeCreated: 1493754587
+licenseType: Store
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 60462
+  packageName: Chibi Mummy
+  packageVersion: 1.1
+  assetPath: Assets/Chibi Mummy/Misc/Scripts/CharMovement.cs
+  uploadId: 177905

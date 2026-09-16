@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 35cc3916ea8705b448cf18ec92171380
+timeCreated: 1460332645
+licenseType: Store
+DefaultImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 60462
+  packageName: Chibi Mummy
+  packageVersion: 1.1
+  assetPath: Assets/Chibi Mummy/Scenes/Demo_scene.unity
+  uploadId: 177905

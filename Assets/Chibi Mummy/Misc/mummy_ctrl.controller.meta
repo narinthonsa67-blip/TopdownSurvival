@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: abd50ef135656e34283c94d1ddd5a402
+timeCreated: 1460332830
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 60462
+  packageName: Chibi Mummy
+  packageVersion: 1.1
+  assetPath: Assets/Chibi Mummy/Misc/mummy_ctrl.controller
+  uploadId: 177905

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 6059b61b7e61984488b2df8fc77ccb2e
+timeCreated: 1460332800
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 60462
+  packageName: Chibi Mummy
+  packageVersion: 1.1
+  assetPath: Assets/Chibi Mummy/Materials/Mat_mummy_mobile.mat
+  uploadId: 177905

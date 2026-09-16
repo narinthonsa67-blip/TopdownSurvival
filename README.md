@@ -1,4 +1,4 @@
 Game Topdown Survival
-MadeIn Ai
+Used Ai 100%
 
 Team: ตุ๋ยดุ้ย Studio

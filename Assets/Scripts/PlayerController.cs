@@ -136,6 +136,7 @@ public class PlayerController : MonoBehaviour
         if (Mouse.current == null)
             return;
 
+        // ใช้โค้ดเดิมของอาจารย์เป๊ะๆ
         if (Mouse.current.leftButton.isPressed &&
             Time.time >= nextShootTime)
         {
@@ -148,6 +149,18 @@ public class PlayerController : MonoBehaviour
 
     private void Shoot()
     {
+        // เช็กกระสุนตรงนี้
+        PlayerAmmo ammo = GetComponent<PlayerAmmo>();
+        if (ammo != null)
+        {
+            if (!ammo.CanShoot())
+            {
+                return; // ถ้ากระสุนหมด สั่งหยุดยิง ไม่เสกกระสุน
+            }
+            ammo.ConsumeAmmo(); // ลดกระสุน
+        }
+
+        // เสกกระสุนออกทันทีตามเดิมของอาจารย์
         Instantiate(
             bulletPrefab,
             firePoint.position,

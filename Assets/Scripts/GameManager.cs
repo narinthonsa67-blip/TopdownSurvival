@@ -2,177 +2,175 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
+public class GameManager : MonoBehaviour // นำเข้าไลบรารี UI ข้อความ, ระบบ Unity, ระบบ Input แบบใหม่ และระบบจัดการ Scene พร้อมประกาศคลาส GameManager
+{ // เริ่มต้นบล็อกของคลาส GameManager
+    public static GameManager Instance; // ตัวแปร Static สำหรับทำระบบ Singleton เพื่อให้สคริปต์อื่นเข้าถึง GameManager ตัวนี้ได้ทันที
 
-public class GameManager : MonoBehaviour
-{
-    public static GameManager Instance;
+    [Header("Game")] // สร้างหัวข้อ "Game" ในหน้าต่าง Inspector ของ Unity
+    public float gameDuration = 60f; // กำหนดระยะเวลาการเล่นทั้งหมดในแต่ละรอบ (ตั้งไว้ 60 วินาที)
 
-    [Header("Game")]
-    public float gameDuration = 60f;
+    [Header("UI")] // สร้างหัวข้อ "UI" ในหน้าต่าง Inspector เพื่อจัดหมวดหมู่ช่องใส่ UI
+    public TMP_Text scoreText; // ตัวแปรอ้างอิงช่องข้อความแสดงคะแนนบนหน้าจอ (TextMeshPro)
+    public TMP_Text timeText; // ตัวแปรอ้างอิงช่องข้อความแสดงเวลาที่เหลือบนหน้าจอ
+    public TMP_Text healthText; // ตัวแปรอ้างอิงช่องข้อความแสดงพลังชีวิตของผู้เล่นบนหน้าจอ
+    public TMP_Text messageText; // ตัวแปรอ้างอิงช่องข้อความแจ้งเตือน (ชนะ/แพ้) กลางหน้าจอ
+    private int score = 0; // ตัวแปรเก็บคะแนนรวมปัจจุบันของผู้เล่น (เริ่มต้นที่ 0)
+    private float timeLeft; // ตัวแปรจับเวลาถอยหลังที่เหลืออยู่ในเกม
+    private bool isGameOver = false; // ตัวแปรสถานะบอกว่าเกมจบลงแล้วหรือไม่ (จริง = จบเกม)
 
-    [Header("UI")]
-    public TMP_Text scoreText;
-    public TMP_Text timeText;
-    public TMP_Text healthText;
-    public TMP_Text messageText;
-    private int score = 0;
-    private float timeLeft;
-    private bool isGameOver = false;
+    public bool IsGameOver // พร็อพเพอร์ตี้สำหรับให้สคริปต์อื่นเข้ามาอ่านค่าสถานะว่าเกมจบแล้วหรือยัง
+    { // เริ่มต้นบล็อกพร็อพเพอร์ตี้ IsGameOver
+        get // บล็อกการดึงค่า (อ่านได้อย่างเดียว ไม่สามารถแก้ค่าได้)
+        { // เริ่มบล็อก get
+            return isGameOver; // ส่งคืนค่าสถานะ isGameOver ปัจจุบันออกไป
+        } // สิ้นสุดบล็อก get
+    } // สิ้นสุดบล็อกพร็อพเพอร์ตี้ IsGameOver
 
-    public bool IsGameOver
-    {
-        get
-        {
-            return isGameOver;
-        }
-    }
+    private void Awake() // ฟังก์ชันทำงานก่อน Start ทันทีที่สคริปต์ถูกโหลดขึ้นมา
+    { // เริ่มต้นบล็อกฟังก์ชัน Awake
+        if (Instance == null) // ตรวจสอบว่ายังไม่เคยมี Instance ของ GameManager นี้มาก่อนใช่ไหม
+        { // เริ่มเงื่อนไขกรณีเป็นตัวแรกที่ถูกสร้าง
+            Instance = this; // กำหนดให้ตัวมันเองกลายเป็น Instance หลักของเกม
+        } // สิ้นสุดเงื่อนไขกรณีเป็นตัวแรก
+        else // หากมี Instance อยู่ในฉากแล้วก่อนหน้านี้
+        { // เริ่มเงื่อนไขกรณีมีตัวซ้ำ
+            Destroy(gameObject); // สั่งทำลายวัตถุตัวที่เกินมาทิ้งทันที เพื่อให้มี GameManager แค่ตัวเดียว
+        } // สิ้นสุดเงื่อนไขกรณีมีตัวซ้ำ
+    } // สิ้นสุดบล็อกฟังก์ชัน Awake
 
-    private void Awake()
-    {
-        if (Instance == null)
-        {
-            Instance = this;
-        }
-        else
-        {
-            Destroy(gameObject);
-        }
-    }
+    private void Start() // ฟังก์ชันทำงานครั้งแรกเมื่อเกมเริ่ม
+    { // เริ่มต้นบล็อกฟังก์ชัน Start
+        timeLeft = gameDuration; // รีเซ็ตเวลาที่เหลือให้เท่ากับเวลาเต็มของรอบการเล่น (60 วินาที)
+        score = 0; // รีเซ็ตคะแนนเริ่มต้นให้เป็น 0
+        isGameOver = false; // รีเซ็ตสถานะจบเกมให้เป็นเท็จ (เกมกำลังดำเนินอยู่)
 
-    private void Start()
-    {
-        timeLeft = gameDuration;
-        score = 0;
-        isGameOver = false;
+        if (messageText != null) // ตรวจสอบว่ามีการลากข้อความเตือนใส่ไว้ในช่อง Inspector หรือไม่
+        { // เริ่มเงื่อนไขตรวจสอบข้อความเตือน
+            messageText.gameObject.SetActive(false); // ซ่อนข้อความแจ้งเตือนไว้ก่อนเมื่อเริ่มเกม
+        } // สิ้นสุดเงื่อนไขตรวจสอบข้อความเตือน
 
-        if (messageText != null)
-        {
-            messageText.gameObject.SetActive(false);
-        }
+        UpdateScoreText(); // สั่งให้อัปเดตข้อความคะแนนบนหน้าจอให้เป็นค่าเริ่มต้น
+        UpdateTimeText(); // สั่งให้อัปเดตข้อความเวลาบนหน้าจอให้เป็นเวลาเริ่มต้น
+    } // สิ้นสุดบล็อกฟังก์ชัน Start
 
-        UpdateScoreText();
-        UpdateTimeText();
-    }
+    private void Update() // ฟังก์ชันทำงานวนซ้ำต่อเนื่องทุกๆ เฟรม
+    { // เริ่มต้นบล็อกฟังก์ชัน Update
+        if (isGameOver) // ตรวจสอบว่าเกมจบลงแล้วหรือไม่
+        { // เริ่มเงื่อนไขเมื่อเกมจบ
+            CheckRestartInput(); // ตรวจสอบว่าผู้เล่นกดปุ่มเพื่อเริ่มเล่นใหม่หรือยัง
+            return; // หยุดการทำงานของ Update ไม่ให้โค้ดส่วนอื่นทำงานต่อ
+        } // สิ้นสุดเงื่อนไขเมื่อเกมจบ
 
-    private void Update()
-    {
-        if (isGameOver)
-        {
-            CheckRestartInput();
-            return;
-        }
+        UpdateTimer(); // สั่งอัปเดตและนับเวลาถอยหลังต่อเนื่องทุกเฟรม
+    } // สิ้นสุดบล็อกฟังก์ชัน Update
 
-        UpdateTimer();
-    }
+    private void UpdateTimer() // ฟังก์ชันคำนวณและลดเวลาถอยหลังของเกม
+    { // เริ่มต้นบล็อกฟังก์ชัน UpdateTimer
+        timeLeft -= Time.deltaTime; // ลดเวลาที่เหลือลงตามเวลาจริงของแต่ละเฟรมที่ผ่านไป
 
-    private void UpdateTimer()
-    {
-        timeLeft -= Time.deltaTime;
+        if (timeLeft <= 0f) // ตรวจสอบว่าเวลาถอยหลังหมดลงแล้วหรือยัง
+        { // เริ่มเงื่อนไขเมื่อเวลาหมด
+            timeLeft = 0f; // ล็อกเวลาให้เป็น 0 ป้องกันไม่ให้ติดลบ
+            WinGame(); // เรียกใช้ฟังก์ชันชนะเกม (รอดชีวิตครบเวลา)
+        } // สิ้นสุดเงื่อนไขเมื่อเวลาหมด
 
-        if (timeLeft <= 0f)
-        {
-            timeLeft = 0f;
-            WinGame();
-        }
+        UpdateTimeText(); // สั่งอัปเดตตัวเลขเวลาบนหน้าจอ
+    } // สิ้นสุดบล็อกฟังก์ชัน UpdateTimer
 
-        UpdateTimeText();
-    }
+    private void UpdateTimeText() // ฟังก์ชันสำหรับแสดงผลเวลาบนหน้าจอ UI
+    { // เริ่มต้นบล็อกฟังก์ชัน UpdateTimeText
+        if (timeText != null) // ตรวจสอบว่ามีช่อง UI เวลาให้แสดงผลหรือไม่
+        { // เริ่มเงื่อนไขตรวจสอบช่องเวลา
+            timeText.text = // กำหนดข้อความที่จะแสดงผล
+                "Time: " + // พิมพ์คำว่า "Time: "
+                Mathf.CeilToInt(timeLeft); // นำเวลาที่เหลือมาปัดเศษขึ้นเป็นจำนวนเต็มเพื่อความสวยงาม
+        } // สิ้นสุดเงื่อนไขตรวจสอบช่องเวลา
+    } // สิ้นสุดบล็อกฟังก์ชัน UpdateTimeText
 
-    private void UpdateTimeText()
-    {
-        if (timeText != null)
-        {
-            timeText.text =
-                "Time: " +
-                Mathf.CeilToInt(timeLeft);
-        }
-    }
+    public void AddScore(int amount) // ฟังก์ชันสำหรับให้สคริปต์อื่นเรียกเพื่อบวกคะแนนเพิ่ม
+    { // เริ่มต้นบล็อกฟังก์ชัน AddScore
+        if (isGameOver) // ถ้าเกมจบไปแล้ว
+            return; // ไม่ต้องบวกคะแนนเพิ่ม ให้หยุดทำงานทันที
 
-    public void AddScore(int amount)
-    {
-        if (isGameOver)
-            return;
+        score += amount; // นำคะแนนที่ส่งมาไปบวกสะสมเข้ากับคะแนนรวม
+        UpdateScoreText(); // สั่งให้อัปเดตข้อความคะแนนบนหน้าจอทันที
+    } // สิ้นสุดบล็อกฟังก์ชัน AddScore
 
-        score += amount;
-        UpdateScoreText();
-    }
+    private void UpdateScoreText() // ฟังก์ชันสำหรับอัปเดตข้อความคะแนนบน UI
+    { // เริ่มต้นบล็อกฟังก์ชัน UpdateScoreText
+        if (scoreText != null) // ตรวจสอบว่ามีช่อง UI คะแนนหรือไม่
+        { // เริ่มเงื่อนไขตรวจสอบช่องคะแนน
+            scoreText.text = // กำหนดข้อความคะแนนที่จะแสดง
+                "Score: " + score; // นำคำว่า "Score: " มาต่อกับตัวเลขคะแนนปัจจุบัน
+        } // สิ้นสุดเงื่อนไขตรวจสอบช่องคะแนน
+    } // สิ้นสุดบล็อกฟังก์ชัน UpdateScoreText
 
-    private void UpdateScoreText()
-    {
-        if (scoreText != null)
-        {
-            scoreText.text =
-                "Score: " + score;
-        }
-    }
+    public void SetHealth( // ฟังก์ชันสำหรับให้สคริปต์หลอดเลือดเรียก เพื่ออัปเดตพลังชีวิตบนหน้าจอ
+        int currentHealth, // พารามิเตอร์รับค่าพลังชีวิตปัจจุบัน
+        int maxHealth) // พารามิเตอร์รับค่าพลังชีวิตสูงสุด
+    { // เริ่มต้นบล็อกฟังก์ชัน SetHealth
+        if (healthText != null) // ตรวจสอบว่ามีช่อง UI พลังชีวิตหรือไม่
+        { // เริ่มเงื่อนไขตรวจสอบช่องพลังชีวิต
+            healthText.text = // กำหนดข้อความพลังชีวิตที่จะแสดง
+                "HP: " + // นำหน้าด้วยคำว่า "HP: "
+                currentHealth + // ตามด้วยค่าพลังชีวิตปัจจุบัน
+                "/" + // คั่นด้วยเครื่องหมายขีดทับ
+                maxHealth; // ตามด้วยค่าพลังชีวิตสูงสุด (เช่น HP: 3/3)
+        } // สิ้นสุดเงื่อนไขตรวจสอบช่องพลังชีวิต
+    } // สิ้นสุดบล็อกฟังก์ชัน SetHealth
 
-    public void SetHealth(
-        int currentHealth,
-        int maxHealth)
-    {
-        if (healthText != null)
-        {
-            healthText.text =
-                "HP: " +
-                currentHealth +
-                "/" +
-                maxHealth;
-        }
-    }
+    public void GameOver() // ฟังก์ชันสำหรับจบเกมเมื่อผู้เล่นแพ้ (พลังชีวิตหมด)
+    { // เริ่มต้นบล็อกฟังก์ชัน GameOver
+        if (isGameOver) // ถ้าสถานะจบเกมทำงานไปแล้ว
+            return; // ป้องกันการเรียกซ้ำ ให้หยุดทำงานทันที
 
-    public void GameOver()
-    {
-        if (isGameOver)
-            return;
+        isGameOver = true; // เปลี่ยนสถานะเป็นเกมจบลงแล้ว
 
-        isGameOver = true;
+        ShowMessage( // เรียกฟังก์ชันแสดงข้อความกลางหน้าจอ
+            "GAME OVER\n" + // ขึ้นบรรทัดแรกว่า "GAME OVER"
+            "Score: " + score + // บรรทัดต่อมาแสดงคะแนนที่ทำได้
+            "\nPress R to Restart" // บรรทัดสุดท้ายแจ้งให้กดปุ่ม R เพื่อเริ่มใหม่
+        ); // สิ้นสุดคำสั่ง ShowMessage
+    } // สิ้นสุดบล็อกฟังก์ชัน GameOver
 
-        ShowMessage(
-            "GAME OVER\n" +
-            "Score: " + score +
-            "\nPress R to Restart"
-        );
-    }
+    private void WinGame() // ฟังก์ชันสำหรับจบเกมเมื่อผู้เล่นชนะ (รอดชีวิตจนหมดเวลา)
+    { // เริ่มต้นบล็อกฟังก์ชัน WinGame
+        if (isGameOver) // ถ้าสถานะจบเกมทำงานไปแล้ว
+            return; // ป้องกันการเรียกซ้ำ ให้หยุดทำงานทันที
 
-    private void WinGame()
-    {
-        if (isGameOver)
-            return;
+        isGameOver = true; // เปลี่ยนสถานะเป็นจบเกมแล้ว
 
-        isGameOver = true;
+        ShowMessage( // เรียกฟังก์ชันแสดงข้อความแจ้งเตือน
+            "YOU SURVIVED!\n" + // แสดงข้อความแสดงความยินดีว่ารอดชีวิตแล้ว
+            "Score: " + score + // แสดงคะแนนทั้งหมดที่ทำได้
+            "\nPress R to Restart" // แนะนำให้กดปุ่ม R เพื่อเริ่มใหม่
+        ); // สิ้นสุดคำสั่ง ShowMessage
+    } // สิ้นสุดบล็อกฟังก์ชัน WinGame
 
-        ShowMessage(
-            "YOU SURVIVED!\n" +
-            "Score: " + score +
-            "\nPress R to Restart"
-        );
-    }
+    private void ShowMessage(string message) // ฟังก์ชันเปิดและแสดงข้อความแจ้งเตือนกลางหน้าจอ
+    { // เริ่มต้นบล็อกฟังก์ชัน ShowMessage
+        if (messageText == null) // ตรวจสอบว่ามีช่องข้อความแจ้งเตือนหรือไม่
+            return; // ถ้าไม่มีช่องข้อความ ให้หยุดทำงานทันที
 
-    private void ShowMessage(string message)
-    {
-        if (messageText == null)
-            return;
+        messageText.gameObject.SetActive(true); // เปิดการแสดงผลของ GameObject ข้อความให้มองเห็นบนหน้าจอ
+        messageText.text = message; // นำข้อความที่ส่งเข้ามาไปใส่ใน TextMeshPro
+    } // สิ้นสุดบล็อกฟังก์ชัน ShowMessage
 
-        messageText.gameObject.SetActive(true);
-        messageText.text = message;
-    }
+    private void CheckRestartInput() // ฟังก์ชันสำหรับตรวจจับการกดปุ่มเพื่อเริ่มเล่นใหม่
+    { // เริ่มต้นบล็อกฟังก์ชัน CheckRestartInput
+        if (Keyboard.current == null) // ตรวจสอบว่าระบบตรวจพบคีย์บอร์ดหรือไม่
+            return; // หากไม่พบคีย์บอร์ด ให้หยุดทำงานทันทีเพื่อป้องกัน Error
 
-    private void CheckRestartInput()
-    {
-        if (Keyboard.current == null)
-            return;
+        if (Keyboard.current.rKey.wasPressedThisFrame) // ตรวจสอบว่าผู้เล่นกดปุ่มตัวอักษร R ในเฟรมนี้หรือไม่
+        { // เริ่มเงื่อนไขเมื่อกดปุ่ม R
+            RestartGame(); // สั่งให้ทำงานฟังก์ชันรีสตาร์ตเกม
+        } // สิ้นสุดเงื่อนไขเมื่อกดปุ่ม R
+    } // สิ้นสุดบล็อกฟังก์ชัน CheckRestartInput
 
-        if (Keyboard.current.rKey.wasPressedThisFrame)
-        {
-            RestartGame();
-        }
-    }
-
-    private void RestartGame()
-    {
-        SceneManager.LoadScene(
-            SceneManager.GetActiveScene().buildIndex
-        );
-    }
-}
-
+    private void RestartGame() // ฟังก์ชันสั่งโหลดฉากเดิมใหม่ทั้งหมดเพื่อเริ่มเล่นใหม่
+    { // เริ่มต้นบล็อกฟังก์ชัน RestartGame
+        SceneManager.LoadScene( // คำสั่งโหลด Scene ของ Unity
+            SceneManager.GetActiveScene().buildIndex // ดึงหมายเลข Index ของ Scene ปัจจุบันขึ้นมาโหลดซ้ำ
+        ); // สิ้นสุดคำสั่ง LoadScene
+    } // สิ้นสุดบล็อกฟังก์ชัน RestartGame
+} // สิ้นสุดบล็อกของคลาส GameManager

@@ -7,7 +7,7 @@ public class PlayerController : MonoBehaviour // บังคับให้ Gam
     [Header("Movement")] // จัดกลุ่มหัวข้อ "Movement" ในหน้าต่าง Inspector ของ Unity
     public float moveSpeed = 6f; // กำหนดความเร็วในการเดินปกติของผู้เล่น (6 หน่วย)
 
-    // [เพิ่มใหม่] การตั้งค่า Dash
+    // การตั้งค่า Dash
     [Header("Dash")] // จัดกลุ่มหัวข้อ "Dash" ในหน้าต่าง Inspector
     public float dashSpeed = 16f;        // ความเร็วตอนพุ่ง // กำหนดความเร็วขณะพุ่งตัว (16 หน่วย)
     public float dashDuration = 0.15f;   // เวลาที่พุ่ง (เสี้ยววินาที) // กำหนดระยะเวลาการพุ่งตัวในแต่ละครั้ง (0.15 วินาที)
@@ -47,12 +47,12 @@ public class PlayerController : MonoBehaviour // บังคับให้ Gam
         ReadMovementInput(); // อ่านค่าการกดปุ่มเดิน (W, A, S, D)
         AimAtMouse(); // คำนวณองศาเพื่อหันหน้าตัวละครตามตำแหน่งเมาส์
         ReadShootingInput(); // ตรวจสอบการกดปุ่มเมาส์เพื่อยิง
-        ReadDashInput(); // [เพิ่มใหม่] อ่านปุ่ม Dash // ตรวจสอบการกดปุ่ม Spacebar เพื่อพุ่งตัว
+        ReadDashInput(); // อ่านปุ่ม Dash // ตรวจสอบการกดปุ่ม Spacebar เพื่อพุ่งตัว
     } // สิ้นสุดบล็อกฟังก์ชัน Update
 
     private void FixedUpdate() // ฟังก์ชันทำงานตามรอบฟิสิกส์คงที่ เหมาะสำหรับคำนวณแรงและการเคลื่อนที่
     { // เริ่มต้นบล็อกฟังก์ชัน FixedUpdate
-        // [เพิ่มใหม่] ถ้ากำลังอยู่ในสถานะ Dash ให้พุ่งไปข้างหน้าโดยไม่สนใจการเดินปกติ
+        // ถ้ากำลังอยู่ในสถานะ Dash ให้พุ่งไปข้างหน้าโดยไม่สนใจการเดินปกติ
         if (dashTimer > 0f) // ตรวจสอบว่ากำลังอยู่ในช่วงเวลา Dash อยู่หรือไม่
         { // เริ่มเงื่อนไขขณะพุ่งตัว
             dashTimer -= Time.fixedDeltaTime; // นับเวลา Dash ถอยหลังตามรอบฟิสิกส์
@@ -72,7 +72,7 @@ public class PlayerController : MonoBehaviour // บังคับให้ Gam
         RotatePlayer(); // หมุนตัวละครไปยังมุมเป้าหมาย
     } // สิ้นสุดบล็อกฟังก์ชัน FixedUpdate
 
-    // [เพิ่มใหม่] เช็กการกด Spacebar
+    // เช็กการกด Spacebar
     private void ReadDashInput() // ฟังก์ชันสำหรับอ่านและสั่งการพุ่งตัว
     { // เริ่มต้นบล็อกฟังก์ชัน ReadDashInput
         if (Keyboard.current == null) return; // หากไม่พบคีย์บอร์ดให้ยกเลิกการทำงานทันที
@@ -155,14 +155,8 @@ public class PlayerController : MonoBehaviour // บังคับให้ Gam
         } // สิ้นสุดเงื่อนไขการยิง
     } // สิ้นสุดบล็อกฟังก์ชัน ReadShootingInput
 
-    private void Shoot() // ฟังก์ชันทำการยิงกระสุนและใส่เอฟเฟกต์
+    private void Shoot() // ฟังก์ชันทำการยิงกระสุน
     { // เริ่มต้นบล็อกฟังก์ชัน Shoot
         Instantiate(bulletPrefab, firePoint.position, firePoint.rotation); // สร้างกระสุนจำลองขึ้นที่จุดและทิศทางของ firePoint
-
-        // [เพิ่มใหม่] สั่นกล้องเบาๆ ตอนยิง
-        if (CameraShake.Instance != null) // ตรวจสอบว่ามีระบบสั่งสั่นกล้อง (CameraShake) อยู่ในฉากหรือไม่
-        { // เริ่มเงื่อนไขสั่งสั่นกล้อง
-            CameraShake.Instance.Shake(0.04f, 0.06f); // สั่งสั่นกล้องเป็นระยะเวลา 0.04 วินาที ด้วยความแรง 0.06 หน่วย
-        } // สิ้นสุดเงื่อนไขสั่งสั่นกล้อง
     } // สิ้นสุดบล็อกฟังก์ชัน Shoot
 } // สิ้นสุดบล็อกของคลาส PlayerController

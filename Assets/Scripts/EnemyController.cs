@@ -1,120 +1,193 @@
-using UnityEngine;
+using System.Collections;
+using UnityEngine; // นำเข้าคลังคำสั่งสำหรับใช้งาน Coroutine และคำสั่งพื้นฐานทั้งหมดของ Unity
 
 [RequireComponent(typeof(Rigidbody))]
-public class EnemyController : MonoBehaviour
-{
-    [Header("Movement")]
-    public float moveSpeed = 2.5f;
+public class EnemyController : MonoBehaviour // บังคับให้วัตถุต้องมี Rigidbody และประกาศคลาสควบคุมศัตรู
+{ // เริ่มต้นขอบเขตคลาส EnemyController
+    [Header("Movement")] // สร้างหัวข้อ "Movement" ในหน้าต่าง Inspector ของ Unity
+    public float moveSpeed = 2.5f; // กำหนดความเร็วในการเคลื่อนที่ของศัตรู (ค่าเริ่มต้น 2.5 หน่วย)
 
-    [Header("Combat")]
-    public int maxHealth = 1;
-    public int touchDamage = 1;
-    public int scoreValue = 10;
-    private int currentHealth;
-    private Rigidbody rb;
-    private Transform player;
-    private bool isDead = false;
+    [Header("Combat")] // สร้างหัวข้อ "Combat" ในหน้าต่าง Inspector ของ Unity
+    public int maxHealth = 1; // กำหนดค่าพลังชีวิตสูงสุดของศัตรู (ค่าเริ่มต้น 1 แต้ม)
+    public int touchDamage = 1; // กำหนดค่าความเสียหายเมื่อวิ่งชนผู้เล่น (ค่าเริ่มต้น 1 แต้ม)
+    public int scoreValue = 10; // กำหนดคะแนนที่ผู้เล่นจะได้รับเมื่อจัดการศัตรูตัวนี้ได้ (10 คะแนน)
 
-    private void Start()
-    {
-        rb = GetComponent<Rigidbody>();
-        currentHealth = maxHealth;
+    // [เพิ่มใหม่] ตั้งค่าแรงดีดใส่ผู้เล่น และระยะเวลากระพริบแดง
+    [Header("Effects & Knockback")] // สร้างหัวข้อ "Effects & Knockback" ในหน้าต่าง Inspector
+    public float touchKnockbackForce = 12f; // แรงผลักใส่ Player เมื่อวิ่งชน // กำหนดค่าแรงผลักที่จะกระทำต่อผู้เล่นเมื่อศัตรูวิ่งชน
+    public float flashDuration = 0.15f;    // ระยะเวลาแสดงสีแดง (วินาที) // กำหนดระยะเวลาที่โมเดลจะเปลี่ยนเป็นสีแดงเมื่อโดนยิง
+    public float knockbackDuration = 0.2f; // [เพิ่มใหม่] เวลาที่หยุดเดินเพื่อให้ลอยตามแรงเด้ง // กำหนดเวลาหยุดเดินเพื่อให้ตัวกระเด็นอย่างเป็นธรรมชาติ
 
-        GameObject playerObject =
-            GameObject.FindGameObjectWithTag(
-                "Player"
-            );
+    private int currentHealth; // ตัวแปรเก็บค่าพลังชีวิตปัจจุบันของศัตรูในเกม
+    private Rigidbody rb; // ตัวแปรสำหรับเก็บคอมโพเนนต์ Rigidbody เพื่อควบคุมระบบฟิสิกส์
+    private Collider col;                  // [เพิ่มใหม่] ตัวดึง Collider เพื่อปิดการชนตอนตาย // ตัวแปรเก็บ Collider สำหรับเปิด/ปิดการตรวจจับการชน
+    private Transform player; // ตัวแปรเก็บตำแหน่งและข้อมูล Transform ของตัวผู้เล่น
+    private bool isDead = false; // ตัวแปรสถานะบอกว่าศัตรูตัวนี้ตายแล้วหรือยัง (เริ่มต้นคือยังไม่ตาย)
 
-        if (playerObject != null)
-        {
-            player = playerObject.transform;
-        }
-    }
+    // [เพิ่มใหม่] ตัวแปรควบคุมการเปลี่ยนสีและตัวจับเวลาแรงเด้ง
+    private Renderer[] renderers; // อาเรย์สำหรับเก็บคอมโพเนนต์ Renderer ของชิ้นส่วนโมเดลทั้งหมด
+    private Color[] originalColors; // อาเรย์สำหรับบันทึกสีดั้งเดิมของโมเดลแต่ละชิ้น
+    private float knockbackTimer = 0f;     // ตัวนับเวลาถอยหลังช่วงที่ตัวกำลังปลิว // ตัวแปรจับเวลาถอยหลังของสถานะกระเด็น
 
-    private void FixedUpdate()
-    {
-        if (isDead)
-            return;
+    private void Start() // ฟังก์ชันเริ่มต้นทำงานครั้งเดียวเมื่อศัตรูถูกสร้างขึ้นมาในฉาก
+    { // เริ่มต้นบล็อกฟังก์ชัน Start
+        rb = GetComponent<Rigidbody>(); // ค้นหาและดึง Rigidbody ของศัตรูมาเก็บไว้ในตัวแปร rb
+        col = GetComponent<Collider>();    // [เพิ่มใหม่] เก็บ Collider ของตัวมันเอง // ค้นหาและดึง Collider ของศัตรูมาเก็บไว้ในตัวแปร col
+        currentHealth = maxHealth; // กำหนดให้พลังชีวิตปัจจุบันเริ่มต้นเท่ากับพลังชีวิตสูงสุด
 
-        if (GameManager.Instance != null &&
-            GameManager.Instance.IsGameOver)
-        {
-            return;
-        }
+        // [เพิ่มใหม่] ค้นหา Renderer ทุกชิ้นในโมเดล และจำสีดั้งเดิมเก็บไว้
+        renderers = GetComponentsInChildren<Renderer>(); // ดึงคอมโพเนนต์ Renderer ทั้งหมดที่มีในตัวเองและวัตถุลูก
+        if (renderers != null && renderers.Length > 0) // ตรวจสอบว่าพบ Renderer ในโมเดลหรือไม่
+        { // เริ่มต้นเงื่อนไขเมื่อมี Renderer
+            originalColors = new Color[renderers.Length]; // สร้างอาเรย์ขนาดเท่ากับจำนวนชิ้นส่วนเพื่อเตรียมจำสีเดิม
+            for (int i = 0; i < renderers.Length; i++) // วนลูปอ่านข้อมูลของ Renderer ทีละชิ้น
+            { // เริ่มต้นลูปบันทึกสี
+                originalColors[i] = renderers[i].material.color; // จดจำสีดั้งเดิมของแต่ละชิ้นส่วนเก็บเข้าสู่อาเรย์
+            } // สิ้นสุดลูปบันทึกสี
+        } // สิ้นสุดเงื่อนไขการตรวจสอบ Renderer
 
-        if (player == null)
-            return;
+        GameObject playerObject = // สร้างตัวแปรชั่วคราวเพื่อรอรับผลการค้นหา GameObject ผู้เล่น
+            GameObject.FindGameObjectWithTag("Player"); // ค้นหาวัตถุในฉากที่มีแท็กชื่อว่า "Player"
 
-        MoveTowardPlayer();
-    }
+        if (playerObject != null) // ตรวจสอบว่าค้นหาผู้เล่นพบหรือไม่
+        { // เริ่มเงื่อนไขเมื่อพบผู้เล่นในฉาก
+            player = playerObject.transform; // ดึง Transform ของผู้เล่นมาเก็บไว้เพื่อใช้อ้างอิงตำแหน่ง
+        } // สิ้นสุดเงื่อนไขเมื่อพบผู้เล่น
+    } // สิ้นสุดบล็อกฟังก์ชัน Start
 
-    private void MoveTowardPlayer()
-    {
-        Vector3 direction =
-            player.position - transform.position;
+    private void FixedUpdate() // ฟังก์ชันอัปเดตแบบรอบเวลาคงที่ เหมาะสำหรับคำนวณการเคลื่อนที่เชิงฟิสิกส์
+    { // เริ่มต้นบล็อกฟังก์ชัน FixedUpdate
+        // [แก้ไขจุดนี้] ตรวจสอบเงื่อนไขอย่างถูกต้องตามลำดับ
+        if (GameManager.Instance != null && // ตรวจสอบว่ามีระบบ GameManager ทำงานอยู่ในฉากหรือไม่
+            GameManager.Instance.IsGameOver) // และตรวจสอบว่าสถานะเกมจบลงแล้ว (Game Over) หรือไม่
+        { // เริ่มเงื่อนไขเมื่อเกมจบ
+            return; // หยุดการทำงานทันทีเพื่อไม่ให้ศัตรูขยับต่อเมื่อจบเกม
+        } // สิ้นสุดเงื่อนไขเมื่อเกมจบ
 
-        direction.y = 0f;
+        // [แก้ไขจุดนี้] ถ้ายังติดสถานะ Knockback ให้ลดเวลา และ return ทันที 
+        // ห้ามให้โค้ดเดินข้างล่างทำงานทับแรงเด้ง
+        if (knockbackTimer > 0f) // ตรวจสอบว่าศัตรูยังอยู่ในช่วงเวลาที่ถูกแรงผลักกระเด็นอยู่หรือไม่
+        { // เริ่มเงื่อนไขช่วงติดสถานะแรงผลัก
+            knockbackTimer -= Time.fixedDeltaTime; // นับเวลาถอยหลังตามเวลาฟิสิกส์ที่ผ่านไป
+            return; // ออกจากการทำงานทันทีเพื่อปล่อยให้ตัวลอยตามแรงฟิสิกส์โดยไม่เดินแทรก
+        } // สิ้นสุดเงื่อนไขช่วงติดสถานะแรงผลัก
 
-        if (direction.sqrMagnitude < 0.01f)
-            return;
+        // [แก้ไขจุดนี้] ถ้าตายแล้ว หรือไม่มี Player แล้ว ไม่ต้องเดิน
+        if (isDead || player == null) // ตรวจสอบว่าศัตรูตายแล้ว หรือไม่มีผู้เล่นอยู่ในฉากแล้วหรือไม่
+            return; // ถ้าตรงเงื่อนไขข้อใดข้อหนึ่ง ให้หยุดทำงานทันที ไม่ต้องเดิน
 
-        direction.Normalize();
+        MoveTowardPlayer(); // เรียกใช้ฟังก์ชันให้ศัตรูเดินและหันหน้าไล่ตามตำแหน่งผู้เล่น
+    } // สิ้นสุดบล็อกฟังก์ชัน FixedUpdate
 
-        Vector3 newPosition =
-            rb.position +
-            direction *
-            moveSpeed *
-            Time.fixedDeltaTime;
+    private void MoveTowardPlayer() // ฟังก์ชันสำหรับคำนวณทิศทางและการเคลื่อนที่เข้าหาผู้เล่น
+    { // เริ่มต้นบล็อกฟังก์ชัน MoveTowardPlayer
+        Vector3 direction = // ประกาศเวกเตอร์เก็บทิศทางที่จะเคลื่อนที่ไป
+            player.position - transform.position; // คำนวณเวกเตอร์โดยเอาตำแหน่งผู้เล่นลบด้วยตำแหน่งของศัตรู
 
-        rb.MovePosition(newPosition);
+        direction.y = 0f; // ล็อกแกน Y ให้เป็น 0 เพื่อป้องกันศัตรูลอยขึ้นฟ้าหรือมุดลงดิน
 
-        Quaternion rotation =
-            Quaternion.LookRotation(direction);
+        if (direction.sqrMagnitude < 0.01f) // ตรวจสอบว่าระยะห่างใกล้มากจนเกือบซ้อนทับกันหรือไม่
+            return; // หากอยู่ใกล้กันมากแล้วให้ข้ามการคำนวณไปเพื่อป้องกันการสั่น
 
-        rb.MoveRotation(rotation);
-    }
+        direction.Normalize(); // แปลงเวกเตอร์ให้มีความยาวเท่ากับ 1 เพื่อใช้บอกทิศทางอย่างแม่นยำ
 
-    public void TakeDamage(int damage)
-    {
-        if (isDead)
-            return;
+        Vector3 newPosition = // คำนวณพิกัดตำแหน่งใหม่ที่ศัตรูจะเดินไป
+            rb.position + // เริ่มจากตำแหน่งปัจจุบันของ Rigidbody
+            direction * // บวกด้วยเวกเตอร์ทิศทางที่จะมุ่งหน้าไป
+            moveSpeed * // คูณด้วยความเร็วการเคลื่อนที่
+            Time.fixedDeltaTime; // คูณด้วยเวลาในรอบฟิสิกส์เพื่อให้การเคลื่อนไหวนุ่มนวลสม่ำเสมอ
 
-        currentHealth -= damage;
+        rb.MovePosition(newPosition); // สั่งเลื่อนวัตถุไปยังตำแหน่งใหม่อย่างถูกต้องตามระบบฟิสิกส์
 
-        if (currentHealth <= 0)
-        {
-            Die();
-        }
-    }
+        Quaternion rotation = // คำนวณองศาการหมุนแบบควอเทอร์เนียน
+            Quaternion.LookRotation(direction); // หาค่ามุมหมุนเพื่อให้ตัวศัตรูหันหน้าไปตามทิศทางที่กำลังเดิน
 
-    private void Die()
-    {
-        isDead = true;
+        rb.MoveRotation(rotation); // สั่งหมุนตัวศัตรูตามระบบฟิสิกส์ไปยังทิศทางที่คำนวณได้
+    } // สิ้นสุดบล็อกฟังก์ชัน MoveTowardPlayer
 
-        if (GameManager.Instance != null)
-        {
-            GameManager.Instance.AddScore(
-                scoreValue
-            );
-        }
+    // [แก้ไขจุดนี้] รับทิศทางกระสุน (hitDirection) และแรงกระแทก (force) จาก Bullet
+    public void TakeDamage(int damage, Vector3 hitDirection, float force) // ฟังก์ชันรับความเสียหาย รับค่าดาเมจ ทิศทาง และแรงผลัก
+    { // เริ่มต้นบล็อกฟังก์ชัน TakeDamage
+        if (isDead) // ตรวจสอบว่าศัตรูตัวนี้ตายไปแล้วหรือยัง
+            return; // ถ้าตายแล้วให้ยกเลิกการทำงานทันที ป้องกันการรับดาเมจซ้ำซ้อน
 
-        Destroy(gameObject);
-    }
+        currentHealth -= damage; // นำค่าความเสียหายที่ได้รับไปหักลบออกจากพลังชีวิตปัจจุบัน
 
-    private void OnTriggerEnter(Collider other)
-    {
-        if (isDead)
-            return;
+        // [เพิ่มใหม่] เรียกให้ตัวกระพริบแดง และใส่แรงผลักถอยหลัง
+        StartCoroutine(FlashRed()); // เริ่มทำงานฟังก์ชันกระพริบสีแดงแบบ Coroutine
+        ApplyKnockback(hitDirection, force); // ส่งค่าทิศทางและแรงผลักไปคำนวณการกระเด็น
 
-        if (other.TryGetComponent<PlayerHealth>(
-            out PlayerHealth playerHealth))
-        {
-            playerHealth.TakeDamage(
-                touchDamage
-            );
+        if (currentHealth <= 0) // ตรวจสอบว่าพลังชีวิตปัจจุบันเหลือศูนย์หรือติดลบหรือไม่
+        { // เริ่มเงื่อนไขเมื่อพลังชีวิตหมด
+            Die(); // เรียกใช้ฟังก์ชันจัดการการตายของศัตรู
+        } // สิ้นสุดเงื่อนไขเมื่อพลังชีวิตหมด
+    } // สิ้นสุดบล็อกฟังก์ชัน TakeDamage
 
-            Destroy(gameObject);
-        }
-    }
-}
+    // [เพิ่มใหม่] ฟังก์ชันคำนวณและส่งแรงผลักให้ศัตรูกระเด็น
+    private void ApplyKnockback(Vector3 direction, float force) // ฟังก์ชันสำหรับผลักตัวศัตรูให้กระเด็นตามแรงกระสุน
+    { // เริ่มต้นบล็อกฟังก์ชัน ApplyKnockback
+        direction.y = 0f; // ตัดแรงในแกนดิ่ง (Y) ทิ้ง เพื่อให้กระเด็นถอยหลังในแนวราบเท่านั้น
+        direction.Normalize(); // แปลงเวกเตอร์ให้เป็นเวกเตอร์ 1 หน่วยเพื่อควบคุมขนาดแรงได้แม่นยำ
 
+        knockbackTimer = knockbackDuration; // กำหนดตัวจับเวลาถอยหลังให้ศัตรูหยุดเดินตามระยะเวลาที่กำหนด
+        rb.linearVelocity = direction * force; // พุ่งกระเด็นตามทิศกระสุน // กำหนดความเร็วเชิงเส้นให้ตัวศัตรูพุ่งถอยหลังตามทิศและแรงกระสุน
+    } // สิ้นสุดบล็อกฟังก์ชัน ApplyKnockback
+
+    // [เพิ่มใหม่] Coroutine เปลี่ยนเป็นสีแดงชั่วคราวแล้วสลับกลับเป็นสีเดิม
+    private IEnumerator FlashRed() // ฟังก์ชันทำงานคู่ขนานเพื่อเปลี่ยนสีโมเดลเป็นสีแดงชั่วขณะ
+    { // เริ่มต้นบล็อก Coroutine FlashRed
+        if (renderers == null) yield break; // ถ้าไม่มีชิ้นส่วน Renderer ให้ยกเลิกการทำงานทันที
+
+        for (int i = 0; i < renderers.Length; i++) // วนลูปเพื่อเปลี่ยนสีของโมเดลทุกชิ้นส่วน
+        { // เริ่มลูปเปลี่ยนเป็นสีแดง
+            renderers[i].material.color = Color.red; // สั่งเปลี่ยนสีเนื้อวัตถุ (Material) ให้กลายเป็นสีแดง
+        } // สิ้นสุดลูปเปลี่ยนเป็นสีแดง
+
+        yield return new WaitForSeconds(flashDuration); // สั่งหยุดรอเวลาตามค่า flashDuration (0.15 วินาที)
+
+        for (int i = 0; i < renderers.Length; i++) // วนลูปเพื่อคืนค่าสีเดิมให้กับโมเดลทุกชิ้นส่วน
+        { // เริ่มลูปคืนค่าสีเดิม
+            renderers[i].material.color = originalColors[i]; // เปลี่ยนสีเนื้อวัตถุกลับไปเป็นสีเดิมที่บันทึกไว้ในตอนแรก
+        } // สิ้นสุดลูปคืนค่าสีเดิม
+    } // สิ้นสุดบล็อก Coroutine FlashRed
+
+    private void Die() // ฟังก์ชันจัดการกระบวนการตายของศัตรู
+    { // เริ่มต้นบล็อกฟังก์ชัน Die
+        isDead = true; // ตั้งค่าสถานะเป็นจริงว่าศัตรูตัวนี้ตายแล้ว
+
+        // [เพิ่มใหม่] ปิด Collider ทันที เพื่อไม่ให้ศัตรูที่กำลังกระเด็นตายไปชนโดน Player
+        if (col != null) // ตรวจสอบว่ามีคอมโพเนนต์ Collider อยู่หรือไม่
+        { // เริ่มเงื่อนไขเมื่อมี Collider
+            col.enabled = false; // ปิดการทำงานของ Collider เพื่อไม่ให้ตัวศัตรูสามารถชนกับวัตถุอื่นได้อีก
+        } // สิ้นสุดเงื่อนไขเมื่อมี Collider
+
+        if (GameManager.Instance != null) // ตรวจสอบว่าระบบ GameManager มีตัวตนอยู่ในฉากหรือไม่
+        { // เริ่มเงื่อนไขเมื่อพบ GameManager
+            GameManager.Instance.AddScore(scoreValue); // ส่งคะแนนไปบวกเพิ่มในระบบจัดการเกม
+        } // สิ้นสุดเงื่อนไขเมื่อพบ GameManager
+
+        // [แก้ไขจุดนี้] หน่วงเวลา 0.2 วินาทีก่อนลบทิ้ง เพื่อให้เห็นตัวเด้งและกระพริบแดงก่อนหายไป
+        Destroy(gameObject, 0.2f); // สั่งทำลายวัตถุศัตรูออกจากฉากโดยหน่วงเวลาไว้ 0.2 วินาที
+    } // สิ้นสุดบล็อกฟังก์ชัน Die
+
+    private void OnTriggerEnter(Collider other) // ฟังก์ชันทำงานอัตโนมัติเมื่อตรวจพบการชนกับ Trigger อื่น
+    { // เริ่มต้นบล็อกฟังก์ชัน OnTriggerEnter
+        if (isDead) // ตรวจสอบว่าศัตรูตายไปแล้วหรือไม่
+            return; // ถ้าตายแล้ว ไม่ต้องคำนวณการชนหรือสร้างดาเมจใดๆ
+
+        if (other.TryGetComponent<PlayerHealth>( // ตรวจสอบว่าสิ่งที่ชนมีคอมโพเนนต์ PlayerHealth (พลังชีวิตผู้เล่น) หรือไม่
+            out PlayerHealth playerHealth)) // หากมี ให้นำไปเก็บไว้ในตัวแปร playerHealth ทันที
+        { // เริ่มเงื่อนไขกรณีชนโดนผู้เล่น
+            // [แก้ไขจุดนี้] ส่งทิศทางและแรงผลักไปให้ Player เด้งถอยหลังด้วย
+            Vector3 knockbackDir = (other.transform.position - transform.position).normalized; // คำนวณเวกเตอร์ทิศทางผลักออกจากตัวศัตรูไปยังผู้เล่น
+
+            playerHealth.TakeDamage( // เรียกใช้ฟังก์ชันรับดาเมจของผู้เล่น
+                touchDamage, // ส่งค่าความเสียหายจากการสัมผัสตัว
+                knockbackDir, // ส่งเวกเตอร์ทิศทางแรงผลัก
+                touchKnockbackForce // ส่งค่าขนาดแรงผลักใส่ผู้เล่น
+            ); // สิ้นสุดการส่งพารามิเตอร์ให้ TakeDamage
+
+            Die(); // ให้ศัตรูระเบิดตัวเองตายทันทีหลังจากพุ่งชนผู้เล่นสำเร็จ
+        } // สิ้นสุดเงื่อนไขกรณีชนโดนผู้เล่น
+    } // สิ้นสุดบล็อกฟังก์ชัน OnTriggerEnter
+} // สิ้นสุดขอบเขตคลาส EnemyController

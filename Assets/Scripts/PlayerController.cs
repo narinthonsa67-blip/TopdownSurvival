@@ -104,7 +104,7 @@ public class PlayerController : MonoBehaviour // ประกาศคลาส 
         if (Keyboard.current == null) return; // หากไม่พบคีย์บอร์ด ให้ข้ามไป
 
         // ตรวจสอบว่ากด Spacebar + ผ่านช่วงคูลดาวน์แล้ว + ตอนนี้ไม่ได้กำลังพุ่งอยู่
-        if (Keyboard.current.spaceKey.wasPressedThisFrame && Time.time >= nextDashTime && !isDashing)
+        if (Keyboard.current.shiftKey.wasPressedThisFrame && Time.time >= nextDashTime && !isDashing)
         { // เริ่มบล็อกเปิดใช้งานพุ่งตัว
             isDashing = true; // เปิดสถานะกำลังพุ่งตัว
             dashEndTime = Time.time + dashDuration; // ตั้งเวลาสิ้นสุดการพุ่ง

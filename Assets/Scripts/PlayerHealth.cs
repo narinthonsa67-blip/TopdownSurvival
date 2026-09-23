@@ -5,7 +5,7 @@ using UnityEngine; // นำเข้าไลบรารีระบบสำ�
 public class PlayerHealth : MonoBehaviour // บังคับให้มี Rigidbody และประกาศคลาส PlayerHealth สำหรับจัดการพลังชีวิตผู้เล่น
 { // เริ่มต้นบล็อกของคลาส PlayerHealth
     public int maxHealth = 3; // กำหนดค่าพลังชีวิตสูงสุดของผู้เล่น (เริ่มต้นที่ 3 หน่วย)
-    private int currentHealth; // ตัวแปรสำหรับเก็บพลังชีวิตปัจจุบันของผู้เล่นในเกม
+    public int currentHealth; // ตัวแปรสำหรับเก็บพลังชีวิตปัจจุบันของผู้เล่นในเกม
 
     [Header("Effects")] // จัดกลุ่มหัวข้อ "Effects" ในหน้าต่าง Inspector ของ Unity
     public float flashDuration = 0.15f; // กำหนดระยะเวลาที่ตัวละครจะกระพริบเป็นสีแดงเมื่อโดนโจมตี (0.15 วินาที)
@@ -91,4 +91,23 @@ public class PlayerHealth : MonoBehaviour // บังคับให้มี R
             GameManager.Instance.GameOver(); // แจ้งระบบ GameManager ว่าผู้เล่นพ่ายแพ้เพื่อแสดงหน้าจอ GameOver
         } // สิ้นสุดบล็อกแจ้งเตือนเกมจบ
     } // สิ้นสุดบล็อกฟังก์ชัน Die
+
+    // ฟังก์ชันสำหรับเพิ่มเลือดเมื่อเก็บกล่องยา
+    public void Heal(int healAmount)
+    {
+        // ตรวจสอบว่าเลือดยังไม่เต็ม และผู้เล่นยังไม่ตาย
+        if (currentHealth < maxHealth && currentHealth > 0)
+        {
+            currentHealth += healAmount;
+
+            // ป้องกันไม่ให้เลือดเกินค่าสูงสุด
+            if (currentHealth > maxHealth)
+            {
+                currentHealth = maxHealth;
+            }
+
+            // สั่งอัปเดต UI เลือดบนหน้าจอ
+            UpdateHealthUI();
+        }
+    }
 } // สิ้นสุดบล็อกของคลาส PlayerHealth

@@ -1489,9 +1489,9 @@ Rigidbody:
   m_ImplicitCom: 1
   m_ImplicitTensor: 1
   m_UseGravity: 0
-  m_IsKinematic: 1
+  m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 0
+  m_Constraints: 116
   m_CollisionDetection: 0
 --- !u!136 &2331463075580159073
 CapsuleCollider:
@@ -1532,6 +1532,9 @@ MonoBehaviour:
   maxHealth: 1
   touchDamage: 1
   scoreValue: 10
+  touchKnockbackForce: 12
+  flashDuration: 0.15
+  knockbackDuration: 0.2
 --- !u!1 &7023407092473760191
 GameObject:
   m_ObjectHideFlags: 0

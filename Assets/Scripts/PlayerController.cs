@@ -167,5 +167,14 @@ public class PlayerController : MonoBehaviour
             firePoint.rotation
         );
     }
+
+    public void ApplyKnockback(Vector3 direction, float force, float duration = 0.2f)
+    {
+        Rigidbody rb = GetComponent<Rigidbody>();
+        if (rb != null)
+        {
+            rb.AddForce(direction * force, ForceMode.Impulse);
+        }
+    }
 }
 

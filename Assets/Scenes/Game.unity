@@ -1542,7 +1542,7 @@ GameObject:
   - component: {fileID: 1122839019}
   - component: {fileID: 1122839018}
   m_Layer: 0
-  m_Name: AmmoSpawner
+  m_Name: ItemSpawner
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1563,6 +1563,8 @@ MonoBehaviour:
   ammoBoxPrefab: {fileID: 4069207912381827257, guid: 0682fc7de3da8fe44937fff34db4227a, type: 3}
   spawnInterval: 7
   maxBoxes: 3
+  HealthBoxPrefab: {fileID: 5931637297463760941, guid: a2fda7db5458de941b4d8a8188d5933a, type: 3}
+  HealthSpawnChance: 30
   minX: -7
   maxX: 7
   minZ: -7
@@ -1993,6 +1995,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerHealth
   maxHealth: 3
+  currentHealth: 0
+  flashDuration: 0.15
 --- !u!114 &1616890814
 MonoBehaviour:
   m_ObjectHideFlags: 0

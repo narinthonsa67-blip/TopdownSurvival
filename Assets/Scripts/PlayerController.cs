@@ -17,6 +17,10 @@ public class PlayerController : MonoBehaviour // ประกาศคลาส 
     public Transform firePoint; // ตำแหน่งและทิศทางที่กระสุนจะพุ่งออกจากปากกระบอกปืน
     public float shootCooldown = 0.2f; // ระยะเวลาหน่วงระหว่างการยิงแต่ละนัด (วินาที)
 
+    [Header("Audio Settings")] // หัวข้อการตั้งค่าระบบเสียงใน Inspector
+    public AudioClip shootSound; // ช่องสำหรับลากไฟล์เสียงเอฟเฟกต์ยิงปืนมาใส่ (.wav / .mp3)
+    private AudioSource audioSource; // ตัวแปรเก็บคอมโพเนนต์ AudioSource สำหรับสั่งขับเสียง
+
     private Rigidbody rb; // ตัวแปรเก็บคอมโพเนนต์ Rigidbody ของผู้เล่น
     private Camera mainCamera; // ตัวแปรเก็บกล้องหลักของฉาก
     private Vector3 moveDirection; // เวกเตอร์ทิศทางการเคลื่อนที่จากการกดปุ่มเดิน
@@ -38,6 +42,14 @@ public class PlayerController : MonoBehaviour // ประกาศคลาส 
         rb = GetComponent<Rigidbody>(); // ดึงคอมโพเนนต์ Rigidbody บนตัวผู้เล่นมาเก็บไว้ในตัวแปร
         mainCamera = Camera.main; // ค้นหาและเก็บกล้องหลักที่มี Tag MainCamera ในฉาก
         targetRotation = transform.rotation; // กำหนดค่ามุมหันเริ่มต้นให้เท่ากับมุมปัจจุบันของตัวละคร
+
+        // ค้นหาคอมโพเนนต์ AudioSource บนตัวผู้เล่น
+        audioSource = GetComponent<AudioSource>();
+        if (audioSource == null) // ถ้ายังไม่มีคอมโพเนนต์ AudioSource
+        { // เริ่มบล็อกสร้าง AudioSource
+            audioSource = gameObject.AddComponent<AudioSource>(); // เพิ่มคอมโพเนนต์ AudioSource ให้อัตโนมัติ
+        } // สิ้นสุดบล็อกสร้าง AudioSource
+        audioSource.playOnAwake = false; // ปิดการเล่นเสียงอัตโนมัติเมื่อเริ่มเกม
     } // สิ้นสุดบล็อกฟังก์ชัน Awake
 
     private void Update() // ฟังก์ชันที่ทำงานซ้ำทุกเฟรมของการแสดงผล
@@ -158,16 +170,22 @@ public class PlayerController : MonoBehaviour // ประกาศคลาส 
         } // สิ้นสุดบล็อกสั่งยิง
     } // สิ้นสุดบล็อก ReadShootingInput
 
-    private void Shoot() // ฟังก์ชันสร้างกระสุนและจัดการระบบกระสุน
+    private void Shoot() // ฟังก์ชันสร้างกระสุน จัดการระบบกระสุน และเล่นเสียงยิง
     { // เริ่มต้นบล็อก Shoot
         PlayerAmmo ammo = GetComponent<PlayerAmmo>(); // ตรวจสอบคอมโพเนนต์ระบบกระสุน
         if (ammo != null) // ถ้ามีระบบกระสุนติดตั้งอยู่
         { // เริ่มบล็อกตรวจเช็คกระสุน
-            if (!ammo.CanShoot()) return; // ถ้ากระสุนหมด สั่งหยุดยิง ไม่เสกกระสุน
+            if (!ammo.CanShoot()) return; // ถ้ากระสุนหมด สั่งหยุดยิง ไม่เสกกระสุนและไม่เล่นเสียง
             ammo.ConsumeAmmo(); // ลดจำนวนกระสุนลง 1 นัด
         } // สิ้นสุดบล็อกตรวจเช็คกระสุน
 
         Instantiate(bulletPrefab, firePoint.position, firePoint.rotation); // เสกกระสุนออกจากตำแหน่งปากกระบอกปืน
+
+        // เล่นเสียงยิงปืน (ใช้ PlayOneShot เพื่อให้เล่นเสียงทับซ้อนกันได้อย่างเป็นธรรมชาติเมื่อยิงรัว)
+        if (shootSound != null && audioSource != null)
+        { // เริ่มบล็อกเล่นเสียง
+            audioSource.PlayOneShot(shootSound); // สั่งเล่นคลิปเสียงยิง 1 ครั้ง
+        } // สิ้นสุดบล็อกเล่นเสียง
     } // สิ้นสุดบล็อก Shoot
 
     // ฟังก์ชันรับแรงกระแทกแบบ 3 พารามิเตอร์ (แก้ Error CS1061 ของ PlayerHealth)
